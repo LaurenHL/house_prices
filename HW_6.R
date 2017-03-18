@@ -95,4 +95,47 @@ imputeTrain <- mice(train, m = 5, method = 'rf')
 
 completedTrain <- complete(imputeTrain, 1)
 
-#hi#
+#End of Brandon's Code
+
+#Change some variables before RF will work 
+##Must rename the variables that start with a number
+colnames(completedTrain)[44]<-"FirstFlrSF"
+colnames(completedTrain)[45]<-"ScndFlrSF"
+colnames(completedTrain)[70]<-"ThreeSsnPorch"
+##GarageYrBlt needs to be numeric 
+completedTrain$GarageYrBlt <- as.numeric(completedTrain$GarageYrBlt)
+#RF cannot handle categorical predictors with more than 53 categories
+##Do not use as.factor(SalePrice)
+
+#Run RF and obtain varImpPlot, do not use column 1 "Id"
+price.rf <- randomForest(SalePrice~ . , importance=TRUE, data=completedTrain[, 2:81])
+varImpPlot(price.rf, scale=FALSE)
+
+#Consider top7 variables from %IncMSE plot
+#OverallQual, GrLivArea, Neighborhood, ExterQual, TotalBsmtSF, GarageCars, FirstFlrSF
+lm7 = lm(formula = SalePrice ~ OverallQual + GrLivArea + Neighborhood + 
+           ExterQual + TotalBsmtSF + GarageCars + FirstFlrSF, data = completedTrain)
+summary(lm7)
+MSE7 <- mean(lm7$residuals^2)
+MSE7
+
+#Consider top4 variables from %IncMSE plot
+#OverallQual, GrLivArea, Neighborhood, ExterQual
+lm4 = lm(formula = SalePrice ~ OverallQual + GrLivArea + Neighborhood + 
+           ExterQual, data = completedTrain)
+summary(lm4)
+MSE4 <- mean(lm4$residuals^2)
+MSE4
+(MSE4/MSE7)
+#MSE4 is 9.6% larger than MSE7
+
+#Consider top3 variables from %IncMSE plot
+#OverallQual, GrLivArea, Neighborhood
+lm3 = lm(formula = SalePrice ~ OverallQual + GrLivArea + Neighborhood, data = completedTrain)
+summary(lm3)
+MSE3 <- mean(lm3$residuals^2)
+MSE3
+(MSE3/MSE7)
+#MSE3 is 18% larger than MSE7
+(MSE3/MSE4)
+#MSE3 is 7.8% larger than MSE4
