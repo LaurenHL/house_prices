@@ -95,7 +95,9 @@ imputeTrain <- mice(train, m = 5, method = 'rf')
 
 completedTrain <- complete(imputeTrain, 1)
 
-#End of Brandon's Code
+#######################
+#End of Brandon's Code#
+#######################
 
 #Change some variables before RF will work 
 ##Must rename the variables that start with a number
@@ -111,6 +113,22 @@ completedTrain$GarageYrBlt <- as.numeric(completedTrain$GarageYrBlt)
 price.rf <- randomForest(SalePrice~ . , importance=TRUE, data=completedTrain[, 2:81])
 varImpPlot(price.rf, scale=FALSE)
 
+#consder all the variables as a baseline
+lmAll = lm(formula = SalePrice ~ . , data=completedTrain[,2:81])
+summary(lmAll)
+MSEall <- mean(lmAll$residuals^2)
+MSEall
+
+#consider top12 varibles from %IncMSE plot
+#OverallQual, GrLivArea, Neighborhood, ExterQual, TotalBsmtSF, GarageCars, 
+##FirstFlrSF, YearBuilt, KitchenQual, GarageArea, ScndFlrSF, BsmtFinSF1
+lm12 = lm(formula = SalePrice ~ OverallQual + GrLivArea + Neighborhood + 
+           ExterQual + TotalBsmtSF + GarageCars + FirstFlrSF + YearBuilt + 
+            KitchenQual + GarageArea + ScndFlrSF + BsmtFinSF1, data = completedTrain)
+summary(lm12)
+MSE12 <- mean(lm12$residuals^2)
+MSE12
+
 #Consider top7 variables from %IncMSE plot
 #OverallQual, GrLivArea, Neighborhood, ExterQual, TotalBsmtSF, GarageCars, FirstFlrSF
 lm7 = lm(formula = SalePrice ~ OverallQual + GrLivArea + Neighborhood + 
@@ -118,6 +136,8 @@ lm7 = lm(formula = SalePrice ~ OverallQual + GrLivArea + Neighborhood +
 summary(lm7)
 MSE7 <- mean(lm7$residuals^2)
 MSE7
+(MSE7/MSE12)
+#MSE7 is 9.4% larger than MSE12
 
 #Consider top4 variables from %IncMSE plot
 #OverallQual, GrLivArea, Neighborhood, ExterQual
@@ -128,6 +148,8 @@ MSE4 <- mean(lm4$residuals^2)
 MSE4
 (MSE4/MSE7)
 #MSE4 is 9.6% larger than MSE7
+(MSE4/MSE12)
+#MSE4 is 19.9% larger than MSE12
 
 #Consider top3 variables from %IncMSE plot
 #OverallQual, GrLivArea, Neighborhood
@@ -139,3 +161,18 @@ MSE3
 #MSE3 is 18% larger than MSE7
 (MSE3/MSE4)
 #MSE3 is 7.8% larger than MSE4
+(MSE3/MSE12)
+#MSE3 is 729.3% larger than MSE12
+
+
+varImpPlot(price.rf)
+#This plot suggets the important variables in a different order, but it shouldn't make much difference
+#Conisder plot 2 top5
+#GrLivArea, Neighborhood, OverallQual, FirstFlrSF, TotalBsmtSF
+lm5.plot2 = lm(formula = SalePrice ~ GrLivArea + Neighborhood + OverallQual + FirstFlrSF +
+                TotalBsmtSF, data = completedTrain)
+summary(lm5.plot2)
+MSE5.2 <- mean(lm5.plot2$residuals^2)
+MSE5.2
+(MSE5.2/MSE4)
+#MSE5.2 is 0.69% larger than MSE4
